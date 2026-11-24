@@ -69,3 +69,8 @@ A local application and Pokédex database specifically built for querying availa
 - [ ] **Phase 5: Polish & Local Dev Server**
   - [ ] Set up lightweight local dev server (`npm run dev`).
   - [ ] Verify query performance and responsiveness across all filters.
+- [x] **Phase 6: Git & GitHub Pages Deployment** *(Completed)*
+  - [x] Initialized local Git repository on `main` and created `.gitignore` (excluding `node_modules/`, `.DS_Store`, `*.log`, and `.env`).
+  - [x] Installed GitHub CLI (`gh` `2.105.0`) at `/usr/local/bin/gh` and created public repository [`gowvijay/pokemon-champions-helper-app`](https://github.com/gowvijay/pokemon-champions-helper-app).
+  - [x] Added `.github/workflows/pages.yml` to run `npm test` and deploy static assets (`index.html`, `src/`, and `public/` if non-empty) to GitHub Pages on every push to `main`.
+  - [x] Enabled GitHub Pages (GitHub Actions workflow) and verified live deployment at https://gowvijay.github.io/pokemon-champions-helper-app/.

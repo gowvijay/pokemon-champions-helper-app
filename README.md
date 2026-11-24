@@ -6,17 +6,28 @@ Designed for competitive team-builders, theorycrafters, and tournament players t
 
 ---
 
-## ⚡ Quick Start
+## 🌐 Live App (GitHub Pages)
+
+No installation is required to use the app—it is hosted live on GitHub Pages:
+
+👉 **[https://gowvijay.github.io/pokemon-champions-helper-app/](https://gowvijay.github.io/pokemon-champions-helper-app/)**
+
+Every push to `main` automatically runs `npm test` and deploys the static app via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
+
+---
+
+## ⚡ Quick Start (Local Development)
 
 ### 1. Prerequisites
 - **Node.js** (v18.0.0 or higher recommended)
 - **npm** (comes with Node.js)
 
 ### 2. Installation
-Clone or navigate to the project directory and install dependencies:
+Clone the repository and install dependencies:
 
 ```bash
-cd /Users/gowvijay/Development/vibes2026/pokemon
+git clone https://github.com/gowvijay/pokemon-champions-helper-app.git
+cd pokemon-champions-helper-app
 npm install
 ```
 
@@ -91,7 +102,11 @@ Open your browser to:
 ## 📂 Project Structure
 
 ```text
-pokemon/
+pokemon-champions-helper-app/
+├── .github/
+│   └── workflows/
+│       └── pages.yml            # GitHub Actions workflow to test & deploy to GitHub Pages
+├── .gitignore
 ├── index.html                   # Main application web interface
 ├── package.json                 # Project scripts and dependencies
 ├── development-notes.md         # Comprehensive engineering notes & roadmap
