@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon Champions Pokédex & Defensive Query Engine</title>
+  <meta name="description" content="Competitive Pokédex for Pokémon Champions. Query 341 legal Pokémon by dual-type defensive resistances, abilities (Levitate, Thick Fat), movepools, base stats, and tiers.">
+  
+  <!-- Modern Typography from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="src/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2246%22 fill=%22%23E62829%22/><path d=%22M4 50h92a46 46 0 0 1-92 0z%22 fill=%22%23ffffff%22/><circle cx=%2250%22 cy=%2250%22 r=%2214%22 fill=%22%23222%22/><circle cx=%2250%22 cy=%2250%22 r=%228%22 fill=%22%23fff%22/></svg>">
+</head>
+<body class="dark-theme">
+
+  <!-- Ambient Glowing Background Accents -->
+  <div class="ambient-glow ambient-glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow ambient-glow-2" aria-hidden="true"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-area">
+        <div class="pokeball-badge" aria-hidden="true">
+          <div class="pokeball-top"></div>
+          <div class="pokeball-center"></div>
+          <div class="pokeball-bottom"></div>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title-row">
+            <h1 class="brand-title">Pokémon Champions</h1>
+            <span class="format-tag">Regulation M • Showdown Mod</span>
+          </div>
+          <p class="brand-subtitle">Competitive Pokédex & Defensive Matchup Query Engine</p>
+        </div>
+      </div>
+
+      <!-- Global Search Bar -->
+      <div class="header-search-box">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="search" 
+            id="global-search-input" 
+            class="global-search-input" 
+            placeholder="Search Pokémon, Dex #, move, ability..." 
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Search Pokémon by name, dex number, move, or ability"
+          >
+          <button type="button" id="clear-search-btn" class="clear-input-btn hidden" aria-label="Clear search">×</button>
+          <kbd class="search-kbd-hint">/</kbd>
+        </div>
+      </div>
+
+      <!-- Quick Action Stats -->
+      <div class="header-actions">
+        <div class="quick-stat-pill" title="Total Pokémon legal in Champions">
+          <span class="stat-number" id="header-total-count">341</span>
+          <span class="stat-label">Legal Dex</span>
+        </div>
+        <button type="button" id="random-pokemon-btn" class="btn btn-secondary btn-icon" title="Inspect a random legal Pokémon">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+          <span>Random</span>
+        </button>
+        <button type="button" id="reset-all-filters-btn" class="btn btn-primary-outline" title="Reset all applied filters">
+          Reset All
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="app-main">
+    
+    <!-- Filter Control Panel -->
+    <section class="filter-panel" aria-label="Query and Filter Controls">
+      
+      <!-- Primary Feature: Interactive Defensive Matchups Matrix -->
+      <div class="filter-card defensive-matrix-card">
+        <div class="filter-card-header">
+          <div class="header-title-group">
+            <div class="feature-icon-badge" aria-hidden="true">🛡️</div>
+            <div>
+              <h2 class="card-title">Defensive Matchup Matrix</h2>
+              <p class="card-desc">Find Pokémon by defensive resistances, immunities, or weaknesses</p>
+            </div>
+          </div>
+          
+          <div class="matrix-controls-bar">
+            <!-- Defensive Ability Switch -->
+            <label class="switch-control" title="Accounts for abilities that modify damage (Levitate, Thick Fat, Flash Fire, Eelevate, etc.)">
+              <input type="checkbox" id="include-abilities-toggle" checked>
+              <span class="switch-slider"></span>
+              <span class="switch-label">Include Defensive Abilities</span>
+            </label>
+
+            <!-- Mode Selector (AND / OR) -->
+            <div class="toggle-group" id="defense-match-mode-toggle" role="group" aria-label="Defensive filter match logic">
+              <button type="button" class="toggle-btn active" data-mode="all" title="Pokémon must meet ALL selected type criteria">AND (All)</button>
+              <button type="button" class="toggle-btn" data-mode="any" title="Pokémon must meet AT LEAST ONE selected type criteria">OR (Any)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Relation Mode Tabs -->
+        <div class="relation-tabs" role="tablist" aria-label="Defensive relation mode">
+          <button type="button" class="relation-tab active" data-relation="resist" role="tab" aria-selected="true" id="tab-resist">
+            <span class="tab-indicator">🛡️</span>
+            <span>Resists</span>
+            <span class="tab-formula">≤ 0.5×</span>
+          </button>
+          <button type="button" class="relation-tab" data-relation="double_resist" role="tab" aria-selected="false" id="tab-double-resist">
+            <span class="tab-indicator">✨</span>
+            <span>Double Resists</span>
+            <span class="tab-formula">≤ 0.25×</span>
+          </button>
+          <button type="button" class="relation-tab" data-relation="immune" role="tab" aria-selected="false" id="tab-immune">
+            <span class="tab-indicator">🚫</span>
+            <span>Immune To</span>
+            <span class="tab-formula">0×</span>
+          </button>
+          <button type="button" class="relation-tab" data-relation="weak" role="tab" aria-selected="false" id="tab-weak">
+            <span class="tab-indicator">⚠️</span>
+            <span>Weak To</span>
+            <span class="tab-formula">≥ 2×</span>
+          </button>
+          <button type="button" class="relation-tab" data-relation="not_weak" role="tab" aria-selected="false" id="tab-not-weak">
+            <span class="tab-indicator">🛡️🚫</span>
+            <span>Not Weak To</span>
+            <span class="tab-formula">≤ 1×</span>
+          </button>
+        </div>
+
+        <!-- 18 Interactive Type Chips Grid -->
+        <div class="type-chips-grid" id="type-chips-grid" role="group" aria-label="Select defensive types">
+          <!-- Populated dynamically via JS with glowing theme accents -->
+        </div>
+
+        <!-- Quick Clear for Defensive Types -->
+        <div class="matrix-footer">
+          <span class="matrix-hint" id="defense-selection-summary">Select one or more types above to filter by defensive effectiveness.</span>
+          <button type="button" id="clear-defensive-types-btn" class="btn-text hidden">Clear Types</button>
+        </div>
+      </div>
+
+      <!-- Advanced Filter Tabs / Drawers -->
+      <div class="secondary-filters-grid">
+        
+        <!-- Filter Card: Species Types & Tiers -->
+        <div class="filter-card">
+          <div class="filter-card-header-compact">
+            <h3 class="card-subtitle">Species Types & Tier</h3>
+            <div class="type-match-select-wrapper">
+              <label for="species-type-mode" class="sr-only">Species Type Match Mode</label>
+              <select id="species-type-mode" class="compact-select">
+                <option value="any">Any Type</option>
+                <option value="all">Both Types</option>
+                <option value="mono">Mono Type</option>
+                <option value="exact">Exact Types</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Species Type Buttons -->
+          <div class="species-type-chips" id="species-type-chips">
+            <!-- 18 mini type pills -->
+          </div>
+
+          <!-- Tiers & Forms Row -->
+          <div class="sub-filter-row">
+            <div class="sub-filter-group">
+              <span class="sub-filter-label">Tiers:</span>
+              <div class="pill-group" id="tier-pill-group">
+                <button type="button" class="pill-btn" data-tier="OU">OU</button>
+                <button type="button" class="pill-btn" data-tier="UU">UU</button>
+                <button type="button" class="pill-btn" data-tier="RU">RU</button>
+                <button type="button" class="pill-btn" data-tier="Uber">Uber</button>
+                <button type="button" class="pill-btn" data-tier="UUBL">UUBL</button>
+              </div>
+            </div>
+
+            <div class="sub-filter-group">
+              <span class="sub-filter-label">Forms:</span>
+              <div class="pill-group" id="form-pill-group">
+                <button type="button" class="pill-btn active" data-mega="all">All</button>
+                <button type="button" class="pill-btn" data-mega="true">Megas Only</button>
+                <button type="button" class="pill-btn" data-mega="false">No Megas</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Card: Movepool & Abilities -->
+        <div class="filter-card">
+          <div class="filter-card-header-compact">
+            <h3 class="card-subtitle">Moves & Abilities</h3>
+            <div class="toggle-group compact" id="move-match-mode-toggle" role="group" aria-label="Move filter logic">
+              <button type="button" class="toggle-btn active" data-mode="all">ALL Moves</button>
+              <button type="button" class="toggle-btn" data-mode="any">ANY Move</button>
+            </div>
+          </div>
+
+          <!-- Move Search Input with Autocomplete Dropdown -->
+          <div class="input-autocomplete-container">
+            <label for="move-filter-input" class="sr-only">Add Move to Filter</label>
+            <div class="autocomplete-input-box">
+              <input 
+                type="text" 
+                id="move-filter-input" 
+                class="filter-text-input" 
+                placeholder="Search & add move (e.g. Fake Out, Knock Off)..."
+                autocomplete="off"
+              >
+              <span class="input-icon">⚔️</span>
+            </div>
+            <div class="autocomplete-dropdown hidden" id="move-autocomplete-dropdown" role="listbox"></div>
+          </div>
+
+          <!-- Selected Move Chips -->
+          <div class="active-item-chips" id="selected-moves-container"></div>
+
+          <!-- Ability Search Input with Autocomplete Dropdown -->
+          <div class="input-autocomplete-container mt-2">
+            <label for="ability-filter-input" class="sr-only">Add Ability to Filter</label>
+            <div class="autocomplete-input-box">
+              <input 
+                type="text" 
+                id="ability-filter-input" 
+                class="filter-text-input" 
+                placeholder="Search & add ability (e.g. Intimidate, Drought)..."
+                autocomplete="off"
+              >
+              <span class="input-icon">✨</span>
+            </div>
+            <div class="autocomplete-dropdown hidden" id="ability-autocomplete-dropdown" role="listbox"></div>
+          </div>
+
+          <!-- Selected Ability Chips & Custom Champions Toggle -->
+          <div class="active-item-chips" id="selected-abilities-container"></div>
+
+          <div class="ability-custom-toggle-row">
+            <label class="checkbox-control">
+              <input type="checkbox" id="custom-champions-ability-toggle">
+              <span class="checkbox-box"></span>
+              <span class="checkbox-text">Custom Champions Abilities Only (Eelevate, Mega Sol, etc.)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Filter Card: Base Stat Thresholds -->
+        <div class="filter-card">
+          <div class="filter-card-header-compact">
+            <h3 class="card-subtitle">Base Stat Thresholds</h3>
+            <div class="stat-preset-group" id="stat-bias-group">
+              <button type="button" class="stat-preset-btn active" data-bias="all">All</button>
+              <button type="button" class="stat-preset-btn" data-bias="fast" title="Speed ≥ 100">⚡ Fast</button>
+              <button type="button" class="stat-preset-btn" data-bias="physical" title="Atk > SpA">⚔️ Phys</button>
+              <button type="button" class="stat-preset-btn" data-bias="special" title="SpA > Atk">🔮 Spec</button>
+              <button type="button" class="stat-preset-btn" data-bias="tank" title="Def + SpD ≥ 180">🛡️ Tank</button>
+            </div>
+          </div>
+
+          <!-- Speed Slider -->
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <span class="slider-title">Min Speed (Spe):</span>
+              <span class="slider-value" id="speed-slider-value">Any</span>
+            </div>
+            <input type="range" id="speed-slider" class="range-slider" min="0" max="160" step="5" value="0">
+            <div class="slider-ticks">
+              <span>0</span>
+              <span>60</span>
+              <span>100</span>
+              <span>130</span>
+              <span>160+</span>
+            </div>
+          </div>
+
+          <!-- BST Slider -->
+          <div class="slider-group mt-2">
+            <div class="slider-label-row">
+              <span class="slider-title">Min Total (BST):</span>
+              <span class="slider-value" id="bst-slider-value">Any</span>
+            </div>
+            <input type="range" id="bst-slider" class="range-slider" min="180" max="700" step="10" value="180">
+            <div class="slider-ticks">
+              <span>180</span>
+              <span>450</span>
+              <span>525</span>
+              <span>600</span>
+              <span>700</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- Active Filter Bar & Results Header -->
+    <section class="results-meta-section">
+      <div class="active-filters-bar" id="active-filters-bar">
+        <span class="active-filters-label">Active Filters:</span>
+        <div class="active-chips-list" id="active-chips-list">
+          <span class="no-filters-msg">None (Showing all legal Pokémon)</span>
+        </div>
+        <button type="button" id="clear-all-chips-btn" class="btn-clear-chips hidden">Clear All</button>
+      </div>
+
+      <div class="results-controls-row">
+        <!-- Results Counter & Speed -->
+        <div class="results-stats">
+          <span class="results-count-text">
+            Showing <strong id="results-count">341</strong> of <span id="results-total">341</span> legal Pokémon
+          </span>
+          <span class="execution-speed-badge" id="execution-speed-badge">⚡ 0.3ms</span>
+        </div>
+
+        <!-- Sorting & Display Options -->
+        <div class="results-view-controls">
+          <div class="sort-select-wrapper">
+            <label for="sort-by-select" class="sort-label">Sort by:</label>
+            <select id="sort-by-select" class="sort-select">
+              <option value="num">National Dex #</option>
+              <option value="bst">Base Stat Total (BST)</option>
+              <option value="spe">Speed (Spe)</option>
+              <option value="atk">Attack (Atk)</option>
+              <option value="spa">Sp. Atk (SpA)</option>
+              <option value="def">Defense (Def)</option>
+              <option value="spd">Sp. Def (SpD)</option>
+              <option value="hp">HP</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
+          </div>
+
+          <button type="button" id="sort-direction-btn" class="btn-icon-toggle" title="Toggle Sort Direction (Ascending / Descending)" aria-label="Toggle sort direction">
+            <span id="sort-direction-icon">↓</span>
+          </button>
+
+          <div class="layout-toggle-group" role="group" aria-label="Grid layout view mode">
+            <button type="button" class="layout-btn active" id="view-grid-btn" title="Grid View" aria-label="Grid View">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+              </svg>
+            </button>
+            <button type="button" class="layout-btn" id="view-compact-btn" title="Compact List View" aria-label="Compact List View">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <rect x="3" y="4" width="18" height="4" rx="1"></rect>
+                <rect x="3" y="10" width="18" height="4" rx="1"></rect>
+                <rect x="3" y="16" width="18" height="4" rx="1"></rect>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pokémon Roster Grid -->
+    <section class="roster-grid-section" aria-label="Pokémon Roster">
+      <div class="pokemon-roster-grid" id="pokemon-roster-grid">
+        <!-- Rendered dynamically by app.js -->
+        <div class="grid-loading-state">
+          <div class="pokeball-spinner" aria-hidden="true"></div>
+          <p>Loading Pokémon Champions database...</p>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state hidden" id="empty-state">
+        <div class="empty-icon" aria-hidden="true">🔍</div>
+        <h3 class="empty-title">No Pokémon match your query</h3>
+        <p class="empty-desc">Try relaxing your defensive resistance requirements, clearing active move filters, or lowering base stat thresholds.</p>
+        <button type="button" class="btn btn-primary" id="empty-state-reset-btn">Reset All Filters</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive Detail Inspector Modal (Phase 4 Foundation) -->
+  <dialog id="pokemon-modal" class="pokemon-modal" aria-labelledby="modal-pokemon-name">
+    <div class="modal-dialog-content" id="modal-dialog-content">
+      <!-- Injected dynamically on click -->
+    </div>
+  </dialog>
+
+  <!-- Scripts -->
+  <script src="src/query-engine.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
